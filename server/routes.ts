@@ -4,6 +4,13 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertCredentialSchema } from "@shared/schema";
 import { Connection, PublicKey } from "@solana/web3.js";
+import { z } from "zod";
+
+// Extract only user input fields for validation
+const userInputSchema = z.object({
+  studentId: insertCredentialSchema.shape.studentId,
+  credentialType: insertCredentialSchema.shape.credentialType,
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -17,6 +24,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const data = insertCredentialSchema.parse(req.body);
+      // Validate user input (studentId, credentialType only)
+      const userInput = userInputSchema.parse(data);
       
       // Store credential hash on Solana blockchain
       // This is a simplified example - in production you would use a proper Solana program
