@@ -6,3 +6,4 @@ vite.config.ts.*
 *.tar.gz
 pnpm-lock.yaml
 .env
+logs
