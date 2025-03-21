@@ -11,6 +11,8 @@ export interface IStorage {
   createCredential(credential: Credential): Promise<Credential>;
   getCredentialByHash(hash: string): Promise<Credential | undefined>;
   sessionStore: session.Store;
+  isConnected(): boolean;
+  ping(): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -19,6 +21,7 @@ export class MemStorage implements IStorage {
   private currentUserId: number;
   private currentCredentialId: number;
   sessionStore: session.Store;
+  private _isConnected: boolean;
 
   constructor() {
     this.users = new Map();
@@ -28,6 +31,7 @@ export class MemStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
+    this._isConnected = true; // In-memory storage is always initially connected
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -58,6 +62,30 @@ export class MemStorage implements IStorage {
     return Array.from(this.credentials.values()).find(
       (credential) => credential.hash === hash,
     );
+  }
+
+  /**
+   * Checks if the memory store is connected and operational
+   * @returns {boolean} true if connected, false otherwise
+   */
+  isConnected(): boolean {
+    return this._isConnected;
+  }
+
+  /**
+   * Performs a quick read operation to verify memstore responsiveness
+   * @returns {Promise<boolean>} true if responsive, false otherwise
+   */
+  async ping(): Promise<boolean> {
+    try {
+      // Simple operation to check if memory storage is functional
+      const testKey = this.currentUserId;
+      const canRead = this.users.has(testKey - 1) !== undefined;
+      return Promise.resolve(this._isConnected);
+    } catch (error) {
+      this._isConnected = false;
+      return Promise.resolve(false);
+    }
   }
 }
 
